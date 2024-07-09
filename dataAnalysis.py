@@ -1,27 +1,5 @@
 import numpy as np
 import pandas as pd
-from flask import Flask, render_template 
-
-app = Flask(__name__)
-
-@app.route("/", methods=["POST","GET"])
-def homePage():
-    return render_template("home.html")
-
-if __name__ == "__main__":
-    app.run(debug=True)
-
-    """
-
-# Convert to dataframe
-df = pd.DataFrame(pd.read_excel("CorporateActionsData.xlsx", engine='openpyxl'))
-
-# Cleaning for any duplicate IDs
-df.drop_duplicates(subset=["key_corporateActionId"], inplace=True)
-
-# Cleaning for any blanks 
-for col in df.columns:
-    df.dropna(subset=[col], inplace=True)
 
 # Store country for each currency to convert
 countryHashmap = {
@@ -48,9 +26,6 @@ currencyRatioHashmap = {
     "CAD":0.57
 }
 
-# Create column to store country of origin 
-df["countryOrigin"] = None
-
 # Convert transactions to GBP for consistency
 def convertRowsToPounds(row):
     # Get relevant data
@@ -66,10 +41,27 @@ def convertRowsToPounds(row):
     row.iat[6] = countryHashmap[transactionCurrency]
 
     return row
-df = df.apply(convertRowsToPounds, axis="columns")
-# New column names for simplicity
-# print(df.columns)
-df.columns = ["corpActionID", "declaredDate", "infoSource","dealAttributes","transactionAmount","transactionCurrency","countryOrigin"]
 
-# Return clean excel file 
-df.to_excel("result.xlsx", index=False)"""
+def initialiseDataFrame(file_name):
+    # Convert to dataframe
+    df = pd.DataFrame(pd.read_excel(file_name, engine='openpyxl'))
+
+    # Cleaning for any duplicate IDs
+    df.drop_duplicates(subset=["key_corporateActionId"], inplace=True)
+
+    # Cleaning for any blanks 
+    for col in df.columns:
+        df.dropna(subset=[col], inplace=True)
+
+    # Create column to store country of origin 
+    df["countryOrigin"] = None
+
+    df = df.apply(convertRowsToPounds, axis="columns")
+    # New column names for simplicity
+    # print(df.columns)
+    df.columns = ["corpActionID", "declaredDate", "infoSource","dealAttributes","transactionAmount","transactionCurrency","countryOrigin"]
+
+    # Return clean excel file 
+    df.to_excel("result.xlsx", index=False)
+    
+    return df

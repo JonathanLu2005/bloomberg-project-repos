@@ -1,8 +1,7 @@
-*{
+* {
     box-sizing: border-box;
     padding: 0;
     margin: 0;
-    overflow: hidden;
 }
 
 body {
@@ -20,4 +19,13 @@ body {
     100% {
         background-position: 100% 50%; 
     }
+}
+
+.centered-form-section {
+    display: flex;
+    justify-content: center;
+}
+
+.centered-form-container {
+    width: 50%;
 }
