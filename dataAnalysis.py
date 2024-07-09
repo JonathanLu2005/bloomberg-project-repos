@@ -65,3 +65,28 @@ def initialiseDataFrame(file_name):
     df.to_excel("uploads/result.xlsx", index=False)
     
     return df
+
+# Determine the number of transactions in each country
+# Determine total transaction value from each country (possibly in the same graph)
+def analyseCountryData(df, group_criterion, column_headings):
+    # transactionSum = lambda s:s.transactionAmount.sum()
+    group = df.groupby(group_criterion)
+    num_transactions = group.size()
+    avg_transactions = group.transactionAmount.mean()
+    std_transactions = group.transactionAmount.std()
+    min_transaction = group.transactionAmount.min()
+    max_transaction = group.transactionAmount.max()
+
+    df = pd.DataFrame({"0":num_transactions , "1":avg_transactions, "2":std_transactions, "3":min_transaction, "4":max_transaction})
+    df.rename_axis(column_headings[0], inplace=True)
+    df["1"] = df["1"].map(lambda x: "{:.2f}".format(x))
+    df["4"] = df["4"].map(lambda x: "{:.2f}".format(x))
+    df.columns = column_headings[1:]
+    return df
+
+if __name__ == "__main__":
+    df = initialiseDataFrame("CorporateActionsData.xlsx")
+    geo_df = analyseCountryData(df, "countryOrigin", ["Geographical Region", "Transaction Count",\
+        "Transaction Value Mean", "Transaction Value STD", "Transaction Value Min", "Transaction Value Max"])
+    print(geo_df)
+    # print(type(geo_df.values))
