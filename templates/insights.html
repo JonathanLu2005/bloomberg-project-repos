@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %} - Insights {% endblock %}
+
+{% block head %}
+    {{ super() }}
+    <style>
+        .button-container {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        button{
+            display: block;
+            margin: 10px auto;
+            padding: 5px;
+        }
+
+    </style>
+{% endblock %}
+
+{% block content %}
+    <div class="button-container">
+        <a href="{{ url_for('downloadFile', filename=filename) }}" class="btn btn-primary">Download Result.xlsx</a>
+    </div>
+
+    <br><br>
+
+    <div>
+        <center>
+        <label>
+            <button id="homePageButton" class="btn btn-primary">
+                Submit another spreadsheet
+            </button>
+        </label>
+        </center>
+    </div>
+
+    <script>
+        document.getElementById("homePageButton").addEventListener("click", function(event) {
+                    event.preventDefault();
+                    window.location.href = "/";});
+    </script>
+{% endblock %}

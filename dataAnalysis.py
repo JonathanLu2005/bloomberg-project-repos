@@ -54,14 +54,14 @@ def initialiseDataFrame(file_name):
         df.dropna(subset=[col], inplace=True)
 
     # Create column to store country of origin 
-    df["countryOrigin"] = None
+    df["geographicalRegion"] = None
 
     df = df.apply(convertRowsToPounds, axis="columns")
     # New column names for simplicity
     # print(df.columns)
-    df.columns = ["corpActionID", "declaredDate", "infoSource","dealAttributes","transactionAmount","transactionCurrency","countryOrigin"]
+    df.columns = ["corpActionID", "declaredDate", "infoSource","dealAttributes","transactionAmount","transactionCurrency","geographicalRegion"]
 
     # Return clean excel file 
-    df.to_excel("result.xlsx", index=False)
+    df.to_excel("uploads/result.xlsx", index=False)
     
     return df
