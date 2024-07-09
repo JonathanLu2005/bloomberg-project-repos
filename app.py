@@ -33,19 +33,20 @@ def homePage():
             filename = secure_filename(file.filename)
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
             print(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-            return redirect(url_for('insightPage',
-                                    f=filename))
+
+            try:
+                df = initialiseDataFrame(os.path.join(UPLOAD_FOLDER, filename))
+                return redirect(url_for('insightPage',
+                                    f=df))
+            except Exception as e:
+                return render_template("home.html", errorMessage=f"An error occured with the file given:{e}. Please submit another spreadsheet of the right format.")
+
     
     return render_template("home.html")
 
 @app.route("/insights/<f>")
 def insightPage(f):
-    try:
-        df = initialiseDataFrame(os.path.join(UPLOAD_FOLDER, f))
-        # could use get min, max, median, mean etc of the transaction value
-        return str(df)
-    except Exception as e:
-        return f"An error occured with the file given:<br>{e}"
+    return str(f)
     
 if __name__ == "__main__":
     app.run()
