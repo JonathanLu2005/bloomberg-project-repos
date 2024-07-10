@@ -1,5 +1,7 @@
+<!-- Retrive base -->
 {% extends "base.html" %}
 
+<!-- Add to title for home page -->
 {% block title%} - User Input {% endblock %}
 
 {% block head%}
@@ -10,27 +12,42 @@
 
 <br><br><br><br>
 
-<section class="jumbotron text-left centered-form-section">
-    <div class="container">
-        <div class="card border-primary border-5 border rounded-bottom rounded-top">
-            <div class="card-body">
-                <h2 class="text-center">Submit spreadsheet</h2>
+<!-- Bootstrap shenanigans to design box for button -->
+<center>
+    <section class="jumbotron text-left centered-form-section bg-transparent w-75">
+        <div class="container" data-aos="fade-right">
+            <div class="card border-primary border-5 border rounded-bottom rounded-top">
+                <div class="card-body">
+                    <h2 class="text-center">Submit spreadsheet</h2>
 
-                <form enctype="multipart/form-data" method="post">
-                    <div class="form-group text-center">
-                        <label for="file">Enter an Excel file:</label>
-                        <input type="file" name="file" accept=".xlsx" required>
-                    </div>
-                    <center>
-                        <button type="submit" class="btn btn-primary">Submit</button>
-                        <br>
-                        <p class="text-danger">{{errorMessage}}</p>
-                    </center>
-                </form>
-                
+                    <!-- Button to retrieve excel file -->
+                    <form enctype="multipart/form-data" method="post">
+                        <!-- Able retrieve file, only take in excel -->
+                        <div class="form-group text-center">
+                            <label for="file">Enter an Excel file:</label>
+                            <input type="file" name="file" accept=".xlsx" required>
+                        </div>
+
+                        <!-- Submit button to be sent to backend -->
+                        <center>
+                            <button type="submit" class="btn btn-primary">Submit</button>
+                            <br>
+
+                            <!-- Error message for user in case anything goes wrong -->
+                            <p class="text-danger">{{errorMessage}}</p>
+                        </center>
+                    </form>
+                    
+                </div>
             </div>
         </div>
-    </div>
-</section>
+    </section>
+</center>
+
+<br><br>
+
+<script>
+    AOS.init();
+</script>
 
 {% endblock %}
