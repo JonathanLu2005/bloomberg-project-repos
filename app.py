@@ -3,7 +3,7 @@ from dataAnalysis import initialiseDataFrame
 from werkzeug.utils import secure_filename
 import io
 
-UPLOAD_FOLDER = "uploads"  # This can be a temporary directory if supported by Render
+UPLOAD_FOLDER = "uploads" 
 ALLOWED_EXTENSIONS = {"xlsx"}
 
 app = Flask(__name__)
@@ -39,18 +39,7 @@ def insightPage(filename):
 
 @app.route("/download/<filename>")
 def downloadFile(filename):
-    # You may need to adjust this function depending on where the file is stored
-    # For Render, it might be stored in a temporary directory or cloud storage
     try:
-        # Example: Directly serve file from memory (not recommended for large files)
-        # with open(os.path.join(app.config["UPLOAD_FOLDER"], filename), "rb") as f:
-        #     return send_file(io.BytesIO(f.read()), as_attachment=True, download_name=filename)
-
-        # Example: Redirect to a cloud storage URL
-        # cloud_storage_url = get_cloud_storage_url(filename)
-        # return redirect(cloud_storage_url)
-
-        # Placeholder: return a message for simplicity
         return f"Download endpoint for {filename}"
 
     except Exception as e:
