@@ -75,6 +75,10 @@ def analyseData(df, group_criterion, column_headings):
     # Convert from a a full date, to just the number of the month of the year when analysing based on time
     if group_criterion == "declaredDate":
         df["declaredDate"] = df["declaredDate"].map(lambda d: int(d.split("-")[1])) # Convert each date to the month number
+    
+    if group_criterion == "dealAttributes":
+        df = expandDealAttributes(df)
+        # Expand the deal attributes to be handled separately
         
     group = df.groupby(group_criterion)
     num_transactions = group.size()
@@ -89,6 +93,10 @@ def analyseData(df, group_criterion, column_headings):
     if group_criterion == "declaredDate":
         df.sort_index(inplace=True)
         df.index = df.index.map(lambda x: month_name[x])
+    
+    if group_criterion == "dealAttributes":
+        df.index = df.index.map(lambda s: s.strip("\"").replace("_", " "))
+        # Remove awkward initial formatting, for a more natural presentation in a table
 
     # Format all numbers to 2.d.p and replace Null std with 0
     df["1"] = df["1"].map(lambda x: "{:.2f}".format(round(x, 2)))
@@ -101,9 +109,36 @@ def analyseData(df, group_criterion, column_headings):
     
     return df
 
+'''
+cleanseDealAttributes()
+Extracts each of the attributes to extend the data frame so that each attribute has its own row instead of a list
+E.g. If a deal attribute entry contains the list ["COMPANY_TAKEOVER", "REVERSE_MERGER", "MINORITY_PURCHASE"]
+then the code below will extract each individaul attribute from above into its own row
+'''
+def expandDealAttributes(df):
+    deal_attributes_col = df.dealAttributes
+
+    modified_df = pd.DataFrame(columns=df.columns)
+
+    modified_index = 0
+    for index, attributes in deal_attributes_col.items():
+        attributes = attributes.strip("[]").split(",")
+        temp = df.loc[index]
+        for att in attributes:
+            temp.dealAttributes = att
+            modified_df.loc[modified_index] = temp
+            modified_index += 1
+    
+    return modified_df
+
 if __name__ == "__main__":
     df = initialiseDataFrame("CorporateActionsData.xlsx")
-    geo_df = analyseData(df, "geographicalRegion", ["Geographical Region", "Transaction Count",\
-        "Transaction Value Mean", "Transaction Value STD", "Transaction Value Min", "Transaction Value Max"])
-    print(geo_df)
+    _df = expandDealAttributes(df)
+    deal_df = analyseData(_df, "dealAttributes", ["Deal Type", "Transaction Count",\
+         "Transaction Value Mean", "Transaction Value STD", "Transaction Value Min", "Transaction Value Max"])
+    print(deal_df)
+    # print(_df.dealAttributes)
+    # geo_df = analyseData(df, "geographicalRegion", ["Geographical Region", "Transaction Count",\
+    #     "Transaction Value Mean", "Transaction Value STD", "Transaction Value Min", "Transaction Value Max"])
+    # print(geo_df)
     # print(type(geo_df.values))

@@ -2,12 +2,14 @@ from flask import Flask, render_template, request, redirect, url_for, flash, sen
 from analysis import initialiseDataFrame, analyseData
 from werkzeug.utils import secure_filename
 import io
+import os
 
 UPLOAD_FOLDER = "uploads"  # This can be a temporary directory if supported by Render
 ALLOWED_EXTENSIONS = {"xlsx"}
 
 geoVar = None
 tempoVar = None
+dealTypeVar = None
 
 app = Flask(__name__)
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
@@ -21,6 +23,8 @@ def allowed_file(filename):
 def homePage():
     global geoVar
     global tempoVar
+    global dealTypeVar
+
     if request.method == 'POST':
         if 'file' not in request.files:
             flash('No file part')
@@ -32,12 +36,14 @@ def homePage():
         if file and allowed_file(file.filename):
             try:
                 df = initialiseDataFrame(file)
-                geoVar = analyseData(df, "geographicalRegion",\
-                     ["Geographical Region", "Transaction Count", "Transaction Value Mean", "Transaction Value STD", "Transaction Value Min", "Transaction Value Max"])
+                stat_headings = ["Transaction Count", "Transaction Value Mean", "Transaction Value STD", "Transaction Value Min", "Transaction Value Max"]
+                geoVar = analyseData(df, "geographicalRegion", ["Geographical Region"] + stat_headings)
                 
-                tempoVar = analyseData(df, "declaredDate",\
-                     ["Month", "Transaction Count", "Transaction Value Mean", "Transaction Value STD", "Transaction Value Min", "Transaction Value Max"])
-                return redirect(url_for('insightPage', filename=file.filename))
+                tempoVar = analyseData(df, "declaredDate", ["Month"] + stat_headings)
+
+                dealTypeVar = analyseData(df, "dealAttributes", ["Deal Type"] + stat_headings)
+
+                return redirect(url_for('insightPage', filename=secure_filename(file.filename)))
                 # return redirect(url_for('insightPage', filename=file.filename))
             except Exception as e:
                 print(e)
@@ -47,23 +53,24 @@ def homePage():
 
 @app.route("/insights/<filename>")
 def insightPage(filename):
-    return render_template("insights.html", filename=filename, geoTable=geoVar.to_html(), tempoTable=tempoVar.to_html())
+    return render_template("insights.html", filename=filename, geoTable=geoVar.to_html(),\
+                            tempoTable=tempoVar.to_html(), dealTypeTable=dealTypeVar.to_html())
 
-@app.route("/download/<filename>")
-def downloadFile(filename):
+@app.route("/download/")
+def downloadFile():
     # You may need to adjust this function depending on where the file is stored
     # For Render, it might be stored in a temporary directory or cloud storage
     try:
         # Example: Directly serve file from memory (not recommended for large files)
-        # with open(os.path.join(app.config["UPLOAD_FOLDER"], filename), "rb") as f:
-        #     return send_file(io.BytesIO(f.read()), as_attachment=True, download_name=filename)
+        with open(os.path.join(app.config["UPLOAD_FOLDER"], "result.xlsx"), "rb") as f:
+            return send_file(io.BytesIO(f.read()), as_attachment=True, download_name="result.xlsx")
 
         # Example: Redirect to a cloud storage URL
         # cloud_storage_url = get_cloud_storage_url(filename)
         # return redirect(cloud_storage_url)
 
         # Placeholder: return a message for simplicity
-        return f"Download endpoint for {filename}"
+        # return f"Download endpoint for {filename}"
 
     except Exception as e:
         return str(e)
