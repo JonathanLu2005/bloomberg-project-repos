@@ -1,10 +1,13 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, send_file
-from dataAnalysis import initialiseDataFrame
+from analysis import initialiseDataFrame, analyseData
 from werkzeug.utils import secure_filename
 import io
 
 UPLOAD_FOLDER = "uploads"  # This can be a temporary directory if supported by Render
 ALLOWED_EXTENSIONS = {"xlsx"}
+
+geoVar = None
+tempoVar = None
 
 app = Flask(__name__)
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
@@ -16,6 +19,8 @@ def allowed_file(filename):
 
 @app.route("/", methods=["POST","GET"])
 def homePage():
+    global geoVar
+    global tempoVar
     if request.method == 'POST':
         if 'file' not in request.files:
             flash('No file part')
@@ -27,15 +32,22 @@ def homePage():
         if file and allowed_file(file.filename):
             try:
                 df = initialiseDataFrame(file)
+                geoVar = analyseData(df, "geographicalRegion",\
+                     ["Geographical Region", "Transaction Count", "Transaction Value Mean", "Transaction Value STD", "Transaction Value Min", "Transaction Value Max"])
+                
+                tempoVar = analyseData(df, "declaredDate",\
+                     ["Month", "Transaction Count", "Transaction Value Mean", "Transaction Value STD", "Transaction Value Min", "Transaction Value Max"])
                 return redirect(url_for('insightPage', filename=file.filename))
+                # return redirect(url_for('insightPage', filename=file.filename))
             except Exception as e:
+                print(e)
                 return render_template("home.html", errorMessage=f"An error occurred with the file given: {e}. Please submit another spreadsheet of the right format.")
     
     return render_template("home.html")
 
 @app.route("/insights/<filename>")
 def insightPage(filename):
-    return render_template("insights.html", filename=filename)
+    return render_template("insights.html", filename=filename, geoTable=geoVar.to_html(), tempoTable=tempoVar.to_html())
 
 @app.route("/download/<filename>")
 def downloadFile(filename):
@@ -57,4 +69,4 @@ def downloadFile(filename):
         return str(e)
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run()

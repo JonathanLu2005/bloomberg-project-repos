@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+from calendar import month_name
 
 # Store country for each currency to convert
 countryHashmap = {
@@ -68,8 +69,13 @@ def initialiseDataFrame(file_name):
 
 # Determine the number of transactions in each country
 # Determine total transaction value from each country (possibly in the same graph)
-def analyseCountryData(df, group_criterion, column_headings):
+def analyseData(df, group_criterion, column_headings):
     # transactionSum = lambda s:s.transactionAmount.sum()
+
+    # Convert from a a full date, to just the number of the month of the year when analysing based on time
+    if group_criterion == "declaredDate":
+        df["declaredDate"] = df["declaredDate"].map(lambda d: int(d.split("-")[1])) # Convert each date to the month number
+        
     group = df.groupby(group_criterion)
     num_transactions = group.size()
     avg_transactions = group.transactionAmount.mean()
@@ -78,15 +84,26 @@ def analyseCountryData(df, group_criterion, column_headings):
     max_transaction = group.transactionAmount.max()
 
     df = pd.DataFrame({"0":num_transactions , "1":avg_transactions, "2":std_transactions, "3":min_transaction, "4":max_transaction})
-    df.rename_axis(column_headings[0], inplace=True)
-    df["1"] = df["1"].map(lambda x: "{:.2f}".format(x))
-    df["4"] = df["4"].map(lambda x: "{:.2f}".format(x))
+    
+    # Put the months in chronological order and convert the month number to its value e.g. 1=January, 2=February ...
+    if group_criterion == "declaredDate":
+        df.sort_index(inplace=True)
+        df.index = df.index.map(lambda x: month_name[x])
+
+    # Format all numbers to 2.d.p and replace Null std with 0
+    df["1"] = df["1"].map(lambda x: "{:.2f}".format(round(x, 2)))
+    df["2"] = df["2"].map(lambda x: "{:.2f}".format(round(x, 2)) if not pd.isnull(x) else "0.00") 
+    df["4"] = df["4"].map(lambda x: "{:.2f}".format(round(x, 2)))
+
     df.columns = column_headings[1:]
+    df.rename_axis("", inplace=True)
+    df.rename_axis(column_headings[0], axis="columns", inplace=True) # Writes the name of the index column in the top-left corner
+    
     return df
 
 if __name__ == "__main__":
     df = initialiseDataFrame("CorporateActionsData.xlsx")
-    geo_df = analyseCountryData(df, "countryOrigin", ["Geographical Region", "Transaction Count",\
+    geo_df = analyseData(df, "geographicalRegion", ["Geographical Region", "Transaction Count",\
         "Transaction Value Mean", "Transaction Value STD", "Transaction Value Min", "Transaction Value Max"])
     print(geo_df)
     # print(type(geo_df.values))
