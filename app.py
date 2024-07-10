@@ -2,6 +2,7 @@ import os
 from flask import Flask, render_template, request, redirect, url_for, flash, send_from_directory
 from dataAnalysis import initialiseDataFrame
 from werkzeug.utils import secure_filename
+import shutil
 
 UPLOAD_FOLDER = "uploads" 
 ALLOWED_EXTENSIONS = {"xlsx"}
@@ -12,6 +13,17 @@ app.secret_key = 'supersecretkey'
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+def clear_uploads_folder():
+    for filename in os.listdir(app.config['UPLOAD_FOLDER']):
+        file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        try:
+            if os.path.isfile(file_path) or os.path.islink(file_path):
+                os.unlink(file_path)
+            elif os.path.isdir(file_path):
+                shutil.rmtree(file_path)
+        except Exception as e:
+            print(f'Failed to delete {file_path}. Reason: {e}')
 
 @app.route("/", methods=["POST", "GET"])
 def homePage():
@@ -25,6 +37,7 @@ def homePage():
             return redirect(request.url)
         if file and allowed_file(file.filename):
             try:
+                clear_uploads_folder()
                 filename = secure_filename(file.filename)
                 file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
                 file.save(file_path)
